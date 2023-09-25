@@ -24,30 +24,67 @@ def read_excel(file_name, sheet_name, columns):
         print(f"Error reading {sheet_name} from {file_name}: {e}")
         return []
 
+
 # Function to update the data table based on search query and sorting
 def update_data():
+    # Get the search query from the entry field
+    search_query = search_entry.get().lower()
+
+    # Get the selected sorting column and order
+    sort_column = sort_column_var.get()
+    sort_order = sort_order_var.get()
+    if sort_column==" ":
+        sort_column="ID"
+
+    # Read data from Excel files
+    entry_log_data = read_excel("DataBase.xlsx", "Entry Log", entry_log_columns)
+    sales_data = read_excel("Sales.xlsx", "Sales", sales_columns)
+    inventory_data = read_excel("Inventory.xlsx", "Inventory", inventory_columns)
+
+    # Filter and sort Entry Log data
+    filtered_entry_log_data = []
+    for item in entry_log_data:
+        # Check if the search query is present in any of the columns
+        if any(search_query in str(value).lower() for value in item.values()):
+            filtered_entry_log_data.append(item)
+
+    if sort_column and sort_order:
+        reverse_order = False if sort_order == "Ascending" else True
+        if "Price" in sort_column:
+            # Sort by numerical value without "RM" prefix
+            filtered_entry_log_data.sort(key=lambda x: float(x[sort_column][2:]), reverse=reverse_order)
+        else:
+            # Sort by other columns as usual
+            filtered_entry_log_data.sort(key=lambda x: x[sort_column], reverse=reverse_order)
+
+
+
     # Update Entry Log tab
     entry_log_tree.delete(*entry_log_tree.get_children())
-    entry_log_data = read_excel("DataBase.xlsx", "Entry Log", entry_log_columns)
-    for item in entry_log_data:
+    for item in filtered_entry_log_data:
         entry_log_tree.insert("", "end", values=list(item.values()))
+
+    # Filter and sort Sales data
+    filtered_sales_data = []
+    for item in sales_data:
+        if any(search_query in str(value).lower() for value in item.values()):
+            filtered_sales_data.append(item)
 
     # Update Sales tab
     sales_tree.delete(*sales_tree.get_children())
-    sales_data = read_excel("Sales.xlsx", "Sales", sales_columns)
-    for item in sales_data:
+    for item in filtered_sales_data:
         sales_tree.insert("", "end", values=list(item.values()))
+
+    # Filter and sort Inventory data
+    filtered_inventory_data = []
+    for item in inventory_data:
+        if any(search_query in str(value).lower() for value in item.values()):
+            filtered_inventory_data.append(item)
 
     # Update Inventory tab
     inventory_tree.delete(*inventory_tree.get_children())
-    inventory_data = read_excel("Inventory.xlsx", "Inventory", inventory_columns)
-    for item in inventory_data:
+    for item in filtered_inventory_data:
         inventory_tree.insert("", "end", values=list(item.values()))
-
-    # Get the search query from the entry field
-    search_query = search_entry.get()
-
-
 
 
 
@@ -76,7 +113,7 @@ def open_data_entry():
         # Load the existing Excel file
         excel_file_path = "DataBase.xlsx"
         try:
-            df_existing = pd.read_excel(excel_file_path, sheet_name="Entry log")
+            df_existing = pd.read_excel(excel_file_path, sheet_name="Entry Log")
         except FileNotFoundError:
             df_existing = pd.DataFrame(columns=["ID", "Item", "Company Brand", "Unit", "Price", "Date"])
 
@@ -84,7 +121,7 @@ def open_data_entry():
         df_updated = pd.concat([df_existing, df_to_append], ignore_index=True)
 
         # Save the updated data to the Excel file
-        df_updated.to_excel(excel_file_path, index=False, engine='openpyxl')
+        df_updated.to_excel(excel_file_path,sheet_name="Entry Log", index=False, engine='openpyxl')
 
         # Display a message box to confirm the data is saved
         update_data()
@@ -188,6 +225,10 @@ if __name__ == "__main__":
     entry_log_tree.pack(fill="both", expand=True)
     notebook.add(entry_log_frame, text="Entry Log")
 
+    # Create a New Data Entry button
+    new_data_entry_button = ttk.Button(entry_log_frame, text="New Data Entry", command=open_data_entry)
+    new_data_entry_button.pack(pady=10)  # Adjust the padding as needed
+
     # Create the Sales tab
     sales_frame = ttk.Frame(notebook)
     sales_data = read_excel("Sales.xlsx", "Sales", sales_columns)
@@ -198,6 +239,9 @@ if __name__ == "__main__":
         sales_tree.insert("", "end", values=list(item.values()))
     sales_tree.pack(fill="both", expand=True)
     notebook.add(sales_frame, text="Sales")
+
+    new_data_entry_button = ttk.Button(sales_frame, text="New Data Entry", command=open_data_entry)
+    new_data_entry_button.pack(pady=10)  # Adjust the padding as needed
 
     # Create the Inventory tab
     inventory_frame = ttk.Frame(notebook)
@@ -210,8 +254,12 @@ if __name__ == "__main__":
     inventory_tree.pack(fill="both", expand=True)
     notebook.add(inventory_frame, text="Inventory")
 
+    new_data_entry_button = ttk.Button(inventory_frame, text="New Data Entry", command=open_data_entry)
+    new_data_entry_button.pack(pady=10)  # Adjust the padding as needed
+
     # Pack the notebook
     notebook.pack(fill="both", expand=True)
+
 
     # Call the update_data function to display all data on startup
     update_data()
