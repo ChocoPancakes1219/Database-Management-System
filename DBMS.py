@@ -76,10 +76,10 @@ def update_data():
             reverse_order = False if sort_order == "Ascending" else True
             if "Price" in sort_column:
                 # Sort by numerical value without "RM" prefix
-                filtered_entry_log_data.sort(key=lambda x: float(x[sort_column][2:]), reverse=reverse_order)
+                filtered_entry_log_data.sort(key=lambda x: float(x[sort_column][2:]) if x[sort_column] is not None else 0, reverse=reverse_order)
             else:
                 # Sort by other columns as usual
-                filtered_entry_log_data.sort(key=lambda x: x[sort_column], reverse=reverse_order)
+                filtered_entry_log_data.sort(key=lambda x: x[sort_column] if x[sort_column] is not None else 0, reverse=reverse_order)
 
 
 
@@ -101,10 +101,10 @@ def update_data():
             reverse_order = False if sort_order == "Ascending" else True
             if "Price" in sort_column:
                 # Sort by numerical value without "RM" prefix
-                filtered_sales_data.sort(key=lambda x: float(x[sort_column][2:]), reverse=reverse_order)
+                filtered_sales_data.sort(key=lambda x: float(x[sort_column][2:]) if x[sort_column] is not None else 0, reverse=reverse_order)
             else:
                 # Sort by other columns as usual
-                filtered_sales_data.sort(key=lambda x: x[sort_column], reverse=reverse_order)
+                filtered_sales_data.sort(key=lambda x: x[sort_column] if x[sort_column] is not None else 0, reverse=reverse_order)
 
     # Update Sales tab
     sales_tree.delete(*sales_tree.get_children())
@@ -124,10 +124,10 @@ def update_data():
             reverse_order = False if sort_order == "Ascending" else True
             if "Price" in sort_column:
                 # Sort by numerical value without "RM" prefix
-                filtered_inventory_data.sort(key=lambda x: float(x[sort_column][2:]), reverse=reverse_order)
+                filtered_inventory_data.sort(key=lambda x: float(x[sort_column][2:]) if x[sort_column] is not None else 0, reverse=reverse_order)
             else:
                 # Sort by other columns as usual
-                filtered_inventory_data.sort(key=lambda x: x[sort_column], reverse=reverse_order)
+                filtered_inventory_data.sort(key=lambda x: x[sort_column] if x[sort_column] is not None else 0, reverse=reverse_order)
 
     # Update Inventory tab
     inventory_tree.delete(*inventory_tree.get_children())
@@ -178,7 +178,7 @@ def New_Entry_log():
             # Update the unit and date in the inventory for the existing item
             existing_item_index = existing_item_index[0]  # Get the first matching index
             existing_unit = inventory_df.at[existing_item_index, "Unit"]
-            updated_unit = existing_unit + ", " + unit
+            updated_unit = str(int(existing_unit) + int(unit))
             inventory_df.at[existing_item_index, "Unit"] = updated_unit
             inventory_df.at[existing_item_index, "Date"] = date
         else:
